@@ -7,45 +7,47 @@
 
 #include <random>
 #include <sstream>
+#include <json/value.h>
 
 #include "game_obj.h"
 #include "item.h"
 #include "game_living_obj.h"
 
 namespace console_game {
-    class Player : public GameObj, public GameLivingObject {
+    class Player : public GameLivingObject {
     private:
-        double m_strength = 10;
-        double m_agility = 10;
-        double m_endurance = 10;
-        double m_min_hit_chance = 0;
-        double m_max_hit_chance = 1;
-        long long m_experience = 0;
-        long long m_money = 0;
+        double strength = 10;
+        double agility = 10;
+        double endurance = 10;
+        double minHitChance = 0;
+        double maxHitChance = 1;
+        long long experience = 0;
+        long long money = 0;
 
         std::vector<Item> m_items{};
     public:
         Player() = default;
-        explicit Player(double mStrength = 10,
-                        double mAgility = 10,
-                        double mEndurance = 10)
-                : m_strength(mStrength),
-                  m_agility(mAgility),
-                  m_endurance(mEndurance) {
-            this->calcTotalHP();
+        explicit Player(double strength = 10,
+                        double agility = 10,
+                        double endurance = 10,
+                        int baseDamage = 10)
+                : strength(strength),
+                  agility(agility),
+                  endurance(endurance) {
+            this->baseDamage = baseDamage;
+            this->healthPoints = this->getMaxHealth();
         }
 
-        void calcTotalHP() {
-            this->m_health = this->m_base_health + this->m_endurance * 20;
-            this->m_max_health = this->m_health;
+        double getMaxHealth() override {
+            return this->endurance * 10;
         }
 
         double calcDmg() override {
             std::random_device r;
             std::default_random_engine e1(r());
-            std::uniform_int_distribution<int> uniform_dist(m_min_hit_chance, m_max_hit_chance);
+            std::uniform_int_distribution<int> uniform_dist(minHitChance, maxHitChance);
             auto hit_chance = uniform_dist(e1);
-            return m_strength * (m_agility * 0.5) * hit_chance;
+            return strength * hit_chance + (agility * 0.5) + this->baseDamage ;
         }
 
         template<GameLivingObjectDerived T>
@@ -64,30 +66,50 @@ namespace console_game {
         ~Player() override = default;
 
         [[nodiscard]] auto getExperience() const {
-            return m_experience;
+            return experience;
         }
 
         void setExperience(long long int mExperience) {
-            m_experience = mExperience;
+            experience = mExperience;
         }
 
         [[nodiscard]] long long int getMoney() const {
-            return m_money;
+            return money;
         }
 
         void setMoney(long long int mMoney) {
-            m_money = mMoney;
+            money = mMoney;
         }
 
-        friend std::ostream & operator<<(std::ostream &os, const Player &p) {
-            os << "Player{health=" << p.m_health << "/" << p.m_max_health << ",exp=" << p.m_experience << ",money=" << p.m_money << "}";
+        friend std::ostream & operator<<(std::ostream &os, Player p) {
+            os << "Player{health=" << p.healthPoints << "/" << p.getMaxHealth() << ",exp=" << p.experience << ",money=" << p.money << "}";
             return os;
         }
 
         std::string to_string() {
             std::stringstream out;
-            out << "Player{health=" << m_health << "/" << m_max_health << ",exp=" << m_experience << ",money=" << m_money << "}";
+            out << "Player{health=" << healthPoints << "/" << getMaxHealth() << ",exp=" << experience << ",money=" << money << "}";
             return out.str();
+        }
+
+        Json::Value to_json() {
+            Json::Value val;
+            val["health"] = this->healthPoints;
+            val["strength"] = this->strength;
+            val["agility"] = this->agility;
+            val["endurance"] = this->endurance;
+            val["experience"] = int (this->experience);
+            val["money"] = int (this->money);
+            return val;
+        }
+
+        void from_json(Json::Value value) {
+            this->healthPoints = value["health"].asDouble();
+            this->strength = value["strength"].asDouble();
+            this->agility = value["agility"].asDouble();
+            this->endurance = value["endurance"].asDouble();
+            this->experience = value["experience"].asInt64();
+            this->money = value["money"].asInt64();
         }
     };
 }

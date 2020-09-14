@@ -10,9 +10,8 @@
 namespace console_game {
     class GameObj {
     private:
-        std::string obj_name;
+        std::string name;
     public:
-        virtual double calcDmg() = 0;
     };
 
     template<class D>

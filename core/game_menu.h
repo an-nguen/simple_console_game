@@ -10,88 +10,89 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <utility>
 #include <curses.h>
 
 namespace console_game {
     class GameMenuItem {
     protected:
-        std::string m_menu_item_name{};
-        std::function<void ()> m_function{};
+        std::string menuItemName{};
+        std::function<void ()> function{};
     public:
         GameMenuItem() = default;
 
-        GameMenuItem(const std::string &mMenuItemName, const std::function<void()> &mFunction) : m_menu_item_name(
-                mMenuItemName), m_function(mFunction) {}
+        GameMenuItem(std::string mMenuItemName, std::function<void()> mFunction) : menuItemName(std::move(
+                mMenuItemName)), function(std::move(mFunction)) {}
 
         virtual ~GameMenuItem() = default;
 
         [[nodiscard]] std::string getName() const {
-            return m_menu_item_name;
+            return menuItemName;
         }
         void setName(const std::string& name) {
-            this->m_menu_item_name = name;
+            this->menuItemName = name;
         }
 
         virtual void run() {
-            m_function();
+            function();
         }
     };
 
     template <class T>
     class GameMenu : public GameMenuItem {
     protected:
-        std::vector<GameMenuItem> m_menu_items{};
-        std::string m_menu_title{};
-        T m_menu_preprint{};
+        std::vector<GameMenuItem> menuItems{};
+        std::string menuTitle{};
+        T menuPreprint{};
 
     public:
         GameMenu() = default;
-        explicit GameMenu(std::initializer_list<GameMenuItem> items) {
-            this->m_menu_items.assign(items);
+        GameMenu(std::initializer_list<GameMenuItem> items) {
+            this->menuItems.assign(items);
         }
         explicit GameMenu(const std::string &name, const std::string &title, std::initializer_list<GameMenuItem> items) {
-            this->m_menu_item_name.assign(name);
-            this->m_menu_items.assign(items);
-            this->m_menu_title.assign(title);
+            this->menuItemName.assign(name);
+            this->menuItems.assign(items);
+            this->menuTitle.assign(title);
         }
-        virtual ~GameMenu() = default;
+        ~GameMenu() override = default;
 
         void addItem(const std::string& name, const std::function<void ()>& action) {
             GameMenuItem item(name, action);
-            this->m_menu_items.push_back(item);
+            this->menuItems.push_back(item);
         }
 
         void addItem(GameMenuItem &item) {
-            this->m_menu_items.push_back(item);
+            this->menuItems.push_back(item);
         }
 
         [[nodiscard]] const std::vector<GameMenuItem> &getMenuItems() const {
-            return m_menu_items;
+            return menuItems;
         }
 
         void setMenuItems(const std::vector<GameMenuItem> &mMenuItems) {
-            m_menu_items = mMenuItems;
+            menuItems = mMenuItems;
         }
 
-        const std::string &getMenuTitle() const {
-            return m_menu_title;
+        [[nodiscard]] const std::string &getMenuTitle() const {
+            return menuTitle;
         }
 
         void setMenuTitle(const std::string &mMenuTitle) {
-            m_menu_title = mMenuTitle;
+            menuTitle = mMenuTitle;
         }
 
         void setPreprint(T &obj) {
-            this->m_menu_preprint = obj;
+            this->menuPreprint = obj;
         }
 
         std::stringstream print() {
             std::stringstream out;
-            if (this->m_menu_preprint != nullptr)
-                out << std::endl << *this->m_menu_preprint << std::endl;
-            out << m_menu_item_name << ":" << std::endl;
-            for (size_t i = 0; i < m_menu_items.size(); i++) {
-                out << i << ". " << m_menu_items.at(i).getName() << std::endl;
+            if (this->menuPreprint != nullptr)
+                out << std::endl << *this->menuPreprint << std::endl;
+            out << menuItemName << ":" << std::endl;
+            for (size_t i = 0; i < menuItems.size(); i++) {
+                out << i << ". " << menuItems.at(i).getName() << std::endl;
             }
             return out;
         }
@@ -119,8 +120,8 @@ namespace console_game {
                     retry = true;
                 }
             } while (retry);
-            if (sel >= 0 && sel < this->m_menu_items.size()) {
-                this->m_menu_items.at(sel).run();
+            if (sel >= 0 && sel < this->menuItems.size()) {
+                this->menuItems.at(sel).run();
             }
             run();
         }

@@ -12,33 +12,31 @@
 #include "game_living_obj.h"
 
 namespace console_game {
-    class Enemy : public GameObj, public GameLivingObject {
+    class Enemy : public GameLivingObject {
     private:
-        int m_strength = 5;
-        int m_agility = 5;
-        int m_endurance = 5;
-        int m_base_damage = 5;
-        double m_min_hit_chance = 0.1;
-        double m_max_hit_chance = 1;
+        int strength = 5;
+        int agility = 5;
+        int endurance = 5;
+        double minHitChance = 0.1;
+        double maxHitChance = 1;
     public:
         Enemy() = default;
-        explicit Enemy(int mStrength, int mAgility, int mEndurance, int mBaseDamage)
-                : m_strength(mStrength), m_agility(mAgility), m_endurance(mEndurance), m_base_damage(mBaseDamage) {
-            calcTotalHP();
+        explicit Enemy(int strength, int agility, int endurance, int baseDamage)
+                : strength(strength), agility(agility), endurance(endurance) {
+            this->baseDamage = baseDamage;
+            this->healthPoints = getMaxHealth();
         }
 
-        void calcTotalHP() {
-            this->m_health = this->m_base_health + this->m_endurance * 12;
-            this->m_max_health = this->m_health;
-
+        double getMaxHealth() override {
+            return this->endurance * 10;
         }
 
         double calcDmg() override {
             std::random_device r;
             std::default_random_engine e1(r());
-            std::uniform_int_distribution<int> uniform_dist(m_min_hit_chance, m_max_hit_chance);
+            std::uniform_int_distribution<int> uniform_dist(minHitChance, maxHitChance);
             auto hit_chance = uniform_dist(e1);
-            return m_strength * (m_agility * 0.5) * hit_chance;
+            return strength * hit_chance + (agility * 0.5) + this->baseDamage;
         }
 
         template<GameLivingObjectDerived T>
@@ -56,14 +54,14 @@ namespace console_game {
 
         ~Enemy() override = default;
 
-        friend std::ostream & operator<<(std::ostream &os, const Enemy &e) {
-            os << "Enemy{health=" << e.m_health << "/" << e.m_max_health << "}";
+        friend std::ostream & operator<<(std::ostream &os, Enemy e) {
+            os << "Enemy{health=" << e.healthPoints << "/" << e.getMaxHealth() << "}";
             return os;
         }
 
-        std::string to_string() {
+        std::string toString() {
             std::stringstream out;
-            out << "Enemy{health=" << m_health << "/" << m_max_health << "}";
+            out << "Enemy{health=" << healthPoints << "/" << this->getMaxHealth() << "}";
             return out.str();
         }
     };

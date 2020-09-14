@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Old Sword",
+    "base_dmg": 20
+  },
+  {
+    "name": "Leather Armor",
+    "endurance": 3
+  }
+]

@@ -11,36 +11,30 @@ namespace console_game {
 
     class GameLivingObject {
     protected:
-        double m_health{};
-        double m_base_health{};
-        double m_max_health{};
+        double healthPoints{};
+        double baseDamage{};
     public:
         GameLivingObject() = default;
         virtual ~GameLivingObject() = default;
 
         virtual void setHealth(double health) {
-            this->m_health = health;
-        }
-
-        [[nodiscard]] virtual double getMaxHealth() const {
-            return this->m_max_health;
-        }
-
-        virtual void setMaxHealth(double health) {
-            this->m_max_health = health;
-        }
-
-        [[nodiscard]] virtual double getBaseHealth() const {
-            return this->m_base_health;
-        }
-
-        virtual void setBaseHealth(double health) {
-            this->m_base_health = health;
+            this->healthPoints = health;
         }
 
         [[nodiscard]] virtual double getHealth() const {
-            return this->m_health;
+            return this->healthPoints;
         }
+
+        [[nodiscard]] virtual double getBaseDamage() const {
+            return this->baseDamage;
+        }
+
+        virtual void setBaseDamage(double damage) {
+            this->baseDamage = damage;
+        }
+
+        virtual double calcDmg() = 0;
+        virtual double getMaxHealth() = 0;
     };
 
     template<class T>
