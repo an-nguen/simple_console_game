@@ -19,33 +19,31 @@
 namespace console_game {
     class GameApplication {
     private:
-        std::shared_ptr<Player> mainActor;
+        std::shared_ptr<console_game::Player> mainActor;
     public:
         GameApplication() = default;
         explicit GameApplication(const Player& main_actor) : mainActor(std::make_shared<Player>(main_actor)) {}
-        explicit GameApplication(std::shared_ptr<Player> main_actor) : mainActor(std::move(main_actor)) {}
         void gameLoop() {
-            std::shared_ptr<console_game::GameMenu<std::shared_ptr<console_game::Player>>> mainMenu(
-                    new console_game::GameMenu<std::shared_ptr<console_game::Player>>
-                            ("Main menu", "Main menu",{
-                                     {"Exit", []() {
-                                         exit(0);
-                                     }},
-                                     {"Go to dungeon", [this, &mainMenu]() {
-                                         std::random_device r;
-                                         std::default_random_engine e1(r());
-                                         std::uniform_int_distribution<int> uniform_dist(1, 9);
-                                         auto enemyStrength = uniform_dist(e1);
-                                         auto enemyAgility = uniform_dist(e1);
-                                         auto enemyEndurance = uniform_dist(e1);
-                                         auto enemyBaseDamage = uniform_dist(e1);
-                                         std::shared_ptr<Enemy> enemy(
-                                                 new console_game::Enemy
-                                                         (enemyStrength, enemyAgility, enemyEndurance, enemyBaseDamage));
-                                         combatMode(this->mainActor, enemy);
-                                     }},
-                             }
-                            ));
+            std::shared_ptr<GameMenu<std::shared_ptr<Player>>> mainMenu (new GameMenu<std::shared_ptr<Player>>
+                    ("Main menu", "Main menu", this->mainActor, {
+                             {"Exit", []() {
+                                 exit(0);
+                             }},
+                             {"Go to dungeon", [this]() {
+                                 std::random_device r;
+                                 std::default_random_engine e1(r());
+                                 std::uniform_int_distribution<int> uniform_dist(1, 9);
+                                 auto enemyStrength = uniform_dist(e1);
+                                 auto enemyAgility = uniform_dist(e1);
+                                 auto enemyEndurance = uniform_dist(e1);
+                                 auto enemyBaseDamage = uniform_dist(e1);
+                                 std::shared_ptr<Enemy> enemy(
+                                         new console_game::Enemy
+                                                 (enemyStrength, enemyAgility, enemyEndurance, enemyBaseDamage));
+                                 combatMode(this->mainActor, enemy);
+                             }},
+                     }
+                    ));
             mainMenu->setPreprint(this->mainActor);
             mainMenu->addItem("Heal (15 money)", [this]() {
                 const int cost = 15;
@@ -74,6 +72,42 @@ namespace console_game {
                 printw("The save file loaded.\n");
                 this->mainActor->from_json(root);
                 file.close();
+            });
+            std::shared_ptr<GameMenu<std::shared_ptr<Player>>> upgradeStatsMenu (new GameMenu<std::shared_ptr<Player>>(
+                    "Upgrade stats menu", "", this->mainActor, {{"Back", []() {} }, {"Add +1 strength (10 exp, 50 money)", [this]() {
+                        if (this->mainActor->getExperience() >= 10 && this->mainActor->getMoney() >= 50) {
+                            this->mainActor->setMoney(this->mainActor->getMoney() - 50);
+                            this->mainActor->setExperience(this->mainActor->getExperience() - 10);
+                            this->mainActor->setStrength(this->mainActor->getStrength() + 1);
+                        } else {
+                            printw("Not enough money!\n");
+                        }
+                        printw(this->mainActor->getStats().c_str());
+                    }},
+                            {
+                                                       "Add +1 agility (25 exp, 25 money)", [this]() {
+                                if (this->mainActor->getExperience() >= 25 && this->mainActor->getMoney() >= 25) {
+                                    this->mainActor->setMoney(this->mainActor->getMoney() - 25);
+                                    this->mainActor->setExperience(this->mainActor->getExperience() - 25);
+                                    this->mainActor->setAgility(this->mainActor->getAgility() + 1);
+                                } else {
+                                    printw("Not enough money!\n");
+                                }
+                                printw(this->mainActor->getStats().c_str());
+                            }
+                                               },{"Add +1 endurance (50 exp, 10 money)", [this]() {
+                                if (this->mainActor->getExperience() >= 50 && this->mainActor->getMoney() >= 10) {
+                                    this->mainActor->setMoney(this->mainActor->getMoney() - 10);
+                                    this->mainActor->setExperience(this->mainActor->getExperience() - 50);
+                                    this->mainActor->setEndurance(this->mainActor->getEndurance() + 1);
+                                } else {
+                                    printw("Not enough money!\n");
+                                }
+                                printw(this->mainActor->getStats().c_str());
+                            }}}));
+            upgradeStatsMenu->setIsChild(true);
+            mainMenu->addItem(upgradeStatsMenu->getName(), [upgradeStatsMenu]() {
+                upgradeStatsMenu->run();
             });
             mainMenu->run();
             endwin();

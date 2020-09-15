@@ -24,7 +24,7 @@ namespace console_game {
         long long experience = 0;
         long long money = 0;
 
-        std::vector<Item> m_items{};
+        std::vector<Item> items{};
     public:
         Player() = default;
         explicit Player(double strength = 10,
@@ -81,9 +81,40 @@ namespace console_game {
             money = mMoney;
         }
 
+        double getStrength() const {
+            return strength;
+        }
+
+        void setStrength(double strength) {
+            Player::strength = strength;
+        }
+
+        double getAgility() const {
+            return agility;
+        }
+
+        void setAgility(double agility) {
+            Player::agility = agility;
+        }
+
+        double getEndurance() const {
+            return endurance;
+        }
+
+        void setEndurance(double endurance) {
+            Player::endurance = endurance;
+        }
+
         friend std::ostream & operator<<(std::ostream &os, Player p) {
             os << "Player{health=" << p.healthPoints << "/" << p.getMaxHealth() << ",exp=" << p.experience << ",money=" << p.money << "}";
             return os;
+        }
+
+        std::string getStats() {
+            std::stringstream ss;
+            ss << "Player{strength=" << this->getStrength() << ",agility=" << this->getAgility() <<
+                ",endurance=" << this->getEndurance() << "}";
+            return ss.str();
         }
 
         std::string to_string() {

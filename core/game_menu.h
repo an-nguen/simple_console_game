@@ -38,20 +38,25 @@ namespace console_game {
         }
     };
 
+    template <class T, class U>
+    concept Derived = std::is_base_of<U, T>::value;
+
     template <class T>
     class GameMenu : public GameMenuItem {
     protected:
         std::vector<GameMenuItem> menuItems{};
         std::string menuTitle{};
         T menuPreprint{};
+        bool isChild = false;
 
     public:
         GameMenu() = default;
         GameMenu(std::initializer_list<GameMenuItem> items) {
             this->menuItems.assign(items);
         }
-        explicit GameMenu(const std::string &name, const std::string &title, std::initializer_list<GameMenuItem> items) {
+        explicit GameMenu(const std::string &name, const std::string &title, T &preprint, std::initializer_list<GameMenuItem> items) {
             this->menuItemName.assign(name);
+            this->menuPreprint = preprint;
             this->menuItems.assign(items);
             this->menuTitle.assign(title);
         }
@@ -86,6 +91,14 @@ namespace console_game {
             this->menuPreprint = obj;
         }
 
+        bool getIsChild() const {
+            return isChild;
+        }
+
+        void setIsChild(bool val) {
+            this->isChild = val;
+        }
+
         std::stringstream print() {
             std::stringstream out;
             if (this->menuPreprint != nullptr)
@@ -112,6 +125,7 @@ namespace console_game {
                         throw std::runtime_error("wrong input");
                     } else {
                         retry = false;
+
                     }
                     clear();
                 } catch (std::exception &e) {
@@ -120,10 +134,20 @@ namespace console_game {
                     retry = true;
                 }
             } while (retry);
+            bool isBack = false;
             if (sel >= 0 && sel < this->menuItems.size()) {
-                this->menuItems.at(sel).run();
+                if (this->isChild) {
+                    if (sel == 0) {
+                        isBack = true;
+                    } else {
+                        this->menuItems.at(sel).run();
+                    }
+                } else {
+                    this->menuItems.at(sel).run();
+                }
             }
-            run();
+            if (!isBack)
+                run();
         }
 
     };
