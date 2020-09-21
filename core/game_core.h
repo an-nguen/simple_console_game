@@ -26,10 +26,10 @@ namespace console_game {
         void gameLoop() {
             std::shared_ptr<GameMenu<std::shared_ptr<Player>>> mainMenu (new GameMenu<std::shared_ptr<Player>>
                     ("Main menu", "Main menu", this->mainActor, {
-                             {"Exit", []() {
+                             new MenuItem("Exit", []() {
                                  exit(0);
-                             }},
-                             {"Go to dungeon", [this]() {
+                             }),
+                             new MenuItem("Go to dungeon", [this]() {
                                  std::random_device r;
                                  std::default_random_engine e1(r());
                                  std::uniform_int_distribution<int> uniform_dist(1, 9);
@@ -41,7 +41,7 @@ namespace console_game {
                                          new console_game::Enemy
                                                  (enemyStrength, enemyAgility, enemyEndurance, enemyBaseDamage));
                                  combatMode(this->mainActor, enemy);
-                             }},
+                             }),
                      }
                     ));
             mainMenu->setPreprint(this->mainActor);
@@ -74,7 +74,7 @@ namespace console_game {
                 file.close();
             });
             std::shared_ptr<GameMenu<std::shared_ptr<Player>>> upgradeStatsMenu (new GameMenu<std::shared_ptr<Player>>(
-                    "Upgrade stats menu", "", this->mainActor, {{"Back", []() {} }, {"Add +1 strength (10 exp, 50 money)", [this]() {
+                    "Upgrade stats menu", "", this->mainActor, {new MenuItem("Back", []() {} ), new MenuItem("Add +1 strength (10 exp, 50 money)", [this]() {
                         if (this->mainActor->getExperience() >= 10 && this->mainActor->getMoney() >= 50) {
                             this->mainActor->setMoney(this->mainActor->getMoney() - 50);
                             this->mainActor->setExperience(this->mainActor->getExperience() - 10);
@@ -83,8 +83,8 @@ namespace console_game {
                             printw("Not enough money!\n");
                         }
                         printw(this->mainActor->getStats().c_str());
-                    }},
-                            {
+                    }),
+                            new MenuItem(
                                                        "Add +1 agility (25 exp, 25 money)", [this]() {
                                 if (this->mainActor->getExperience() >= 25 && this->mainActor->getMoney() >= 25) {
                                     this->mainActor->setMoney(this->mainActor->getMoney() - 25);
@@ -95,7 +95,8 @@ namespace console_game {
                                 }
                                 printw(this->mainActor->getStats().c_str());
                             }
-                                               },{"Add +1 endurance (50 exp, 10 money)", [this]() {
+                            ),
+                            new MenuItem("Add +1 endurance (50 exp, 10 money)", [this]() {
                                 if (this->mainActor->getExperience() >= 50 && this->mainActor->getMoney() >= 10) {
                                     this->mainActor->setMoney(this->mainActor->getMoney() - 10);
                                     this->mainActor->setExperience(this->mainActor->getExperience() - 50);
@@ -104,7 +105,8 @@ namespace console_game {
                                     printw("Not enough money!\n");
                                 }
                                 printw(this->mainActor->getStats().c_str());
-                            }}}));
+                            })}
+                            ));
             upgradeStatsMenu->setIsChild(true);
             mainMenu->addItem(upgradeStatsMenu->getName(), [upgradeStatsMenu]() {
                 upgradeStatsMenu->run();
